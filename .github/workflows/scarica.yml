@@ -1,0 +1,49 @@
+name: scarica-dati
+on:
+  push:
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  dati:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install yfinance pandas
+      - name: Scarica prezzi
+        run: |
+          python - <<'EOF'
+          import yfinance as yf, pandas as pd, time, os
+          T = """RACE.MI MONC.MI REC.MI PRY.MI IP.MI AMP.MI DIA.MI BC.MI BMED.MI FBK.MI
+          BGN.MI TRN.MI SRG.MI PST.MI G.MI ISP.MI ENEL.MI A2A.MI HER.MI REY.MI
+          SOL.MI DLG.MI SES.MI CRL.MI ELN.MI TIP.MI ZV.MI DAN.MI TGYM.MI DAL.MI
+          BRE.MI CMB.MI BEC.MI SAB.MI PHN.MI GE.MI EQUI.MI MARR.MI IG.MI
+          CSNDX.MI XNAS.MI ANX.MI EQQQ.MI FTSEMIB.MI""".split()
+          os.makedirs("data", exist_ok=True)
+          out = {}
+          for t in T:
+              for k in range(3):
+                  try:
+                      d = yf.download(t, start="2005-01-01", interval="1mo",
+                                      auto_adjust=True, progress=False)
+                      if len(d):
+                          s = d["Close"]
+                          out[t] = s.iloc[:, 0] if hasattr(s, "columns") else s
+                          break
+                  except Exception as e:
+                      print(t, e)
+                  time.sleep(3)
+              print(t, len(out.get(t, [])))
+              time.sleep(1)
+          pd.DataFrame(out).to_csv("data/prezzi_mensili.csv")
+          EOF
+      - name: Salva
+        run: |
+          git config user.name "bot"
+          git config user.email "bot@users.noreply.github.com"
+          git add data
+          git commit -m "aggiorna dati" || exit 0
+          git push
