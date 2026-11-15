@@ -4,7 +4,7 @@ on:
   push:
     paths:
       - ".github/workflows/portafoglio.yml"
-      - "scripts/portafoglio.py"
+      - ".github/workflows/scripts/portafoglio.py"
 permissions:
   contents: write
 jobs:
