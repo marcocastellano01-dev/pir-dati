@@ -17,6 +17,7 @@ jobs:
           python-version: "3.12"
       - run: pip install yfinance pandas
       - run: python .github/workflows/scripts/portafoglio.py
+      - run: python .github/workflows/scripts/storico.py
       - name: Salva
         run: |
           git config user.name "bot"
